@@ -23,10 +23,17 @@
         <div class="row mt-4">
             <div class="row no-gutters">
                 {% for key, value in tags.items %}
-                <div class="col-12 col-sm-6 col-md-3">{{key}}</div>
-                <div class="col-6 col-md-9">{{value}}</div>
+                    <th><div class="col-12 col-sm-6 col-md-3">{{key}}:</div></th>
+                    <td><div class="col-6 col-md-9">{{value}}</div></td>
                 {% endfor %}
             </div>
         </div>
+        {% if tags %}
+        <form action="{% url 'result' %}" method="post">{% csrf_token %}
+            <!-- <input type="text" name="{{tags.items}}"/> -->
+            <input type="submit" class="form-control" name="{{tags}}" value="click up data" />
+        </form>
+        {% endif %}
+        <!-- <button>click up button</button> -->
 	</div>
 {% endblock %}
