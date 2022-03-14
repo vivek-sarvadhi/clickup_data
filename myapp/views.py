@@ -11,6 +11,12 @@ from bs4 import BeautifulSoup
 from django.http import JsonResponse
 import json
 import re
+from urllib.request import Request, urlopen
+import urllib
+import ast
+from lxml import html
+
+
 # Create your views here.
 class RegisterView(View):
     
@@ -77,7 +83,7 @@ class IndexView(View):
                     job_breadcrumb_data = job_breadcrumb.strip()
                 content = soup.find("div", class_="job-description").get_text()
 
-                job_features = soup.find('ul', {'class': 'cfe-ui-job-features p-0 fluid-layout-md'}).findAll("li", recursive='false')
+                job_features = soup.find('ul', {'class': 'cfe-ui-job-features p-0 fluid-layout-md'}).findAll("li", recursive='"false"')
                 jobfeaturedetail = []
                 for job_feature in job_features:
                     jobfeaturedetail.append(job_feature.stripped_strings)
@@ -127,21 +133,35 @@ class IndexView(View):
                     if key == "Hourly Rate":
                         fixed_price_hourly_rate = value
 
-                skills = soup.find(class_="fluid-layout").findAll("div", recursive='false')
+                
+                # tree = html.fromstring(response.content)
+                # print("tree",tree)
+                
+                # element1 = tree.xpath('//*[@id="main"]/div/div/div/div[1]/div/div[1]/section[4]/div/div/div[1]')
+                # element2 = tree.xpath('//*[@id="main"]/div/div/div/div[1]/div/div[1]/section[4]/div/div/div[2]/div/strong')
+                # element3 = tree.xpath('//*[@id="main"]/div/div/div/div[1]/div/div[1]/section[4]/div/div/div[3]/div/strong')
+                # for i in element1:
+                #     print(i.text)
+                skills = soup.find(class_="fluid-layout").findAll("div", recursive='"false"')
                 skilldetail = []
                 for skill in skills:
                     skilldetail.append(skill.stripped_strings)
+                # print("skill detail ----",skilldetail)
                 skills_dict = {}
+                print(skilldetail)
                 for i in skilldetail:
                     value_list = []
                     for id,line in enumerate(i):
+                        print(id,line)
                         if id == 0:
                             key = line
                         else:
                             value = line
                             value_list.append(value)
+                            # break
                     skills_dict[key] = value_list
-
+                    break
+                print("6666666666-------",skills_dict)
                 primary_skill_list = []
                 secondry_skill_list = []
                 other_skill_list = []
@@ -155,6 +175,8 @@ class IndexView(View):
                             primary_skill_list.append(i)
                 else:
                     for key,value in skills_dict.items():
+                        print("key",key)
+                        print("value",value)
                         if key == "Full Stack Development Deliverables":
                             primary_skill_list.append(key)
                             for i in value:
@@ -164,21 +186,23 @@ class IndexView(View):
                             for i in value:
                                 secondry_skill_list.append(i)
                         if key == "Other":
-                            # other_skill.append(key)
+                            print("hello")
                             for i in value:
+                                print(i)
                                 other_skill_list.append(i)
                 print(primary_skill_list)
+                print("other_skill_list",other_skill_list)
                 if primary_skill_list:
                     primary_skill = ','.join(primary_skill_list)
                 if secondry_skill_list:
                     secondry_skill = ','.join(secondry_skill_list)
                 if other_skill_list:
                     other_skill = ','.join(other_skill_list)
-                print(primary_skill)
-                print(secondry_skill)
-                print(other_skill)
+                print("primary_skill",primary_skill)
+                print("secondry_skill",secondry_skill)
+                print("other_skill",other_skill)
 
-                activitys = soup.find("ul", class_="list-unstyled mb-0").findAll("li", recursive='false')
+                activitys = soup.find("ul", class_="list-unstyled mb-0").findAll("li", recursive='"false"')
                 activitydetail = []
                 for activity in activitys:
                     activitydetail.append(activity.stripped_strings)
@@ -277,13 +301,9 @@ class IndexView(View):
                 data = {
                     "message":"Please Provide Valid Upwork website url"
                 }
-                return render(request, 'myapp/index.html', {"tags":data})
+                return render(request, 'myapp/index.html', {"error_message":data})
         return render(request, 'myapp/index.html')
 
-from urllib.request import Request, urlopen
-import urllib
-import ast
-# from urllib2 import Request, urlopen
 
 class ResultView(View):
 
@@ -301,18 +321,21 @@ class ResultView(View):
         mydata = ast.literal_eval(dict_str)
         print(repr(mydata))
         print(type(mydata))
-        print("-----",mydata['Task Name'])
-        print("-----",type(mydata['Task Name']))
-
-        
-        varAllValues ="""{
+        print("-----",mydata['Type of Job'])
+        print("-----",type(mydata['Type of Job']))
+        if mydata['Type of Job'] == "Hourly":
+            type_of_job_value = 1
+        else:
+            type_of_job_value = 0
+            
+        value_dict = {
                 "id": "23ebp2z",
                 "custom_id": {},
-                "name": "mydata['Task Name']",
-                "text_content": "Job 1",
-                "description": "Job 1",
+                "name": mydata['Task Name'],
+                "text_content": mydata['Task Description'],
+                "description": mydata['Task Description'],
                 "orderindex": "7169309.00000000000000000000000000000000",
-                "archived": false,
+                "archived": "false",
                 "creator": {
                     "id": 3739924,
                     "username": "Paras Chodavadiya",
@@ -341,183 +364,183 @@ class ResultView(View):
                     "name": "Category",
                     "type": "short_text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value": "mydata['category']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value": mydata['category'],
+                    "required": "false"
                     },
                     {
                     "id": "5fa81aa1-340f-497f-b2d8-c213ae1d0908",
                     "name": "Client Company Profile",
                     "type": "short_text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value": "mydata['client company profile']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value": mydata['client company profile'],
+                    "required": "false"
                     },
                     {
                     "id": "07400e5a-eaf6-4300-980e-4df3ade3d4a6",
                     "name": "Client's hiring rate",
                     "type": "short_text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value": "mydata['client hiring rate']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value": mydata['client hiring rate'],
+                    "required": "false"
                     },
                     {
                     "id": "18b147ce-b1ac-4abd-a01a-b7a129edaa92",
                     "name": "Client's location",
                     "type": "short_text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value":"mydata['client location']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value":mydata['client location'],
+                    "required": "false"
                     },
                     {
                     "id": "c78767b1-a2c7-40ad-8d2d-7028d9dccc0e",
                     "name": "Client's membership",
                     "type": "short_text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value": "mydata['client membership']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value": mydata['client membership'],
+                    "required": "false"
                     },
                     {
                     "id": "b51ae5c0-c549-4bbd-9b5b-d56621b2c886",
                     "name": "Client's open jobs",
                     "type": "short_text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value": "mydata['client open job']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value": mydata['client open job'],
+                    "required": "false"
                     },
                     {
                     "id": "3add9e80-1918-4391-b96b-c2618f490595",
                     "name": "Client's total hires",
                     "type": "short_text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value": "mydata['client total hire']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value": mydata['client total hire'],
+                    "required": "false"
                     },
                     {
                     "id": "028a911e-be4a-4caf-b2fc-d6d550acc4c7",
                     "name": "Client's total posted jobs",
                     "type": "short_text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value": "mydata['client total posted job']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value": mydata['client total posted job'],
+                    "required": "false"
                     },
                     {
                     "id": "b287f060-ac7f-42fc-85e7-c24fbe107262",
                     "name": "Client's total spent",
                     "type": "short_text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value": "mydata['client total spent']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value": mydata['client total spent'],
+                    "required": "false"
                     },
                     {
                     "id": "36ac8426-39f4-495c-b4fa-781f2f436071",
                     "name": "Experience Level",
                     "type": "short_text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value": "mydata['experience level']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value": mydata['experience level'],
+                    "required": "false"
                     },
                     {
                     "id": "41af3fa8-cf11-4869-9509-f4426fc9fe33",
                     "name": "Fixed Price / Hourly Rate",
                     "type": "short_text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value": "mydata['fixed price/hourly rate']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value": mydata['fixed price/hourly rate'],
+                    "required": "false"
                     },
                     {
                     "id": "9733f6ad-bb4b-4ed3-8aa4-0f481a1cadb7",
                     "name": "Hourly Average rate",
                     "type": "short_text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value": "mydata['hourly average rate']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value": mydata['hourly average rate'],
+                    "required": "false"
                     },
                     {
                     "id": "d413bee7-4c2f-44dc-84b2-e04bc1267af6",
                     "name": "Job Location",
                     "type": "short_text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value": "mydata['job location']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value": mydata['job location'],
+                    "required": "false"
                     },
                     {
                     "id": "bbc7c539-38b2-408e-8fa7-a11d15c87b6a",
                     "name": "Job post URL",
                     "type": "short_text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value": "mydata['job post url']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value": mydata['job post url'],
+                    "required": "false"
                     },
                     {
                     "id": "acf36e4a-5ca1-46eb-96dc-c538e0aa1b90",
                     "name": "Other Skills",
                     "type": "text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value": "mydata['other skill']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value": mydata['other skill'],
+                    "required": "false"
                     },
                     {
                     "id": "506d38bd-a6e2-49bb-b376-05e314cd70c3",
                     "name": "Primary Skills",
                     "type": "text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value": "mydata['primary skill']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value": mydata['primary skill'],
+                    "required": "false"
                     },
                     {
                     "id": "d5e94415-3802-43a0-ab4b-2100f1540527",
                     "name": "Project Duration",
                     "type": "short_text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value": "mydata['project duration']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value": mydata['project duration'],
+                    "required": "false"
                     },
                     {
                     "id": "7f1840e8-4558-41c4-a48e-b28f6dec9a97",
                     "name": "Project Type",
                     "type": "short_text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value": "mydata['project type']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value": mydata['project type'],
+                    "required": "false"
                     },
                     {
                     "id": "1af7e84a-3061-4580-bbc2-ec2d266e9319",
                     "name": "Secondary Skills",
                     "type": "text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value": "mydata['secondary skill']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value": mydata['secondary skill'],
+                    "required": "false"
                     },
                     {
                     "id": "ebd59fa4-5c44-4a62-8c24-f7e3870187e9",
                     "name": "Total hours paid by client",
                     "type": "short_text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value": "mydata['total hour paid by client']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value": mydata['total hour paid by client'],
+                    "required": "false"
                     },
                     {
-                    "id": "d9d2dcec-1629-4cc3-b890-0a3e1d953f05",
+                    "id": "fde9585d-6104-4473-b33c-a7a1e6f815c2",
                     "name": "Type of Job",
                     "type": "drop_down",
                     "type_config": {
@@ -525,31 +548,32 @@ class ResultView(View):
                         "placeholder": {},
                         "options": [
                         {
-                            "id": "d954d82b-b438-4a72-9b31-aedc33e302d2",
-                            "name": "Hourly",
+                            "id": "07b51327-92b2-4fe9-9ba1-f3ef3c25231a",
+                            "name": "Fixed",
                             "color": {},
                             "orderindex": 0
                         },
                         {
-                            "id": "a5cf1474-702f-4b46-bdfa-643faa10747a",
-                            "name": "Fixed",
+                            "id": "28d4f728-ea84-40a4-8890-dba528c185a1",
+                            "name": "Hourly",
                             "color": {},
                             "orderindex": 1
                         }
                         ]
                     },
-                    "hide_from_guests": false,
-                    "value": "mydata['Type of Job']",
-                    "required": false
+                    "date_created": "1647166163217",
+                    "hide_from_guests": "false",
+                    "value": type_of_job_value,
+                    "required": "false"
                     },
                     {
                     "id": "338cb162-3940-4a18-a931-7b1ef4649f37",
                     "name": "Weekly Hour Limit",
                     "type": "short_text",
                     "type_config": {},
-                    "hide_from_guests": false,
-                    "value": "mydata['weekly hour limit']",
-                    "required": false
+                    "hide_from_guests": "false",
+                    "value": mydata['weekly hour limit'],
+                    "required": "false"
                     }
                 ],
                 "dependencies": [],
@@ -560,25 +584,27 @@ class ResultView(View):
                 "list": {
                     "id": "175339326",
                     "name": "Proposals",
-                    "access": true
+                    "access": "true"
                 },
                 "project": {
                     "id": "103457058",
                     "name": "Proposals",
-                    "hidden": false,
-                    "access": true
+                    "hidden": "false",
+                    "access": "true"
                 },
                 "folder": {
                     "id": "103457058",
                     "name": "Proposals",
-                    "hidden": false,
-                    "access": true
+                    "hidden": "false",
+                    "access": "true"
                 },
                 "space": {
                     "id": "55498314"
                 },
                 "attachments": []
-                }"""
+                }
+        
+        # varAllValues ="""value_dict"""
 
         
         headers = {
@@ -586,9 +612,10 @@ class ResultView(View):
         'Content-Type': 'application/json'
         }
         
-        varBinData = bytes(varAllValues, 'utf-8')
+        # varBinData = bytes(varAllValues, 'utf-8')
+        varBinData = json.dumps(value_dict).encode('utf-8')
+        # varBinData = bytes(varAllValues, 'utf-8')
         aaa = Request('https://api.clickup.com/api/v2/list/175339326/task', data=varBinData, headers=headers)
 
         response_body = urlopen(aaa).read()
-        print("hjhhhhhhh",response_body)
-        return render(request, 'myapp/result_data.html', {"response_body":"response_body"})
+        return render(request, 'myapp/index.html', {"response_body":"The proposal has been added to ClickUp successfully"})

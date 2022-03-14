@@ -8,6 +8,7 @@
 {% block content %}
   <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"> -->
   	<div class="container">
+        {% if not response_body %}
   		<div class="row">
             <form action="">
                 <div class="row">
@@ -20,6 +21,7 @@
                 </div>
             </form> 
 		</div>
+        {% endif %}
         <div class="row mt-4">
             <div class="row no-gutters">
                 {% for key, value in tags.items %}
@@ -29,10 +31,28 @@
             </div>
         </div>
         {% if tags %}
-        <form action="{% url 'result' %}" method="post">{% csrf_token %}
-            <!-- <input type="text" name="{{tags.items}}"/> -->
-            <input type="submit" class="form-control" name="{{tags}}" value="click up data" />
-        </form>
+        <div class="row mt-4">
+            <form action="{% url 'result' %}" method="post">{% csrf_token %}
+                <!-- <input type="text" name="{{tags.items}}"/> -->
+                <input type="submit" class="form-control" name="{{tags}}" value="click up data" />
+            </form>
+        </div>
+        {% endif %}
+
+        {% if error_message %}
+            <div class="alert alert-danger alert-dismissible fade show">
+                <strong>Error!</strong> Please Provide Upwork Job Detail Url.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endif %}
+
+        {% if response_body %}
+        <div class="container">
+            <div class="alert alert-success">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <strong>Success!</strong> {{ response_body }}
+            </div>
+        </div>
         {% endif %}
         <!-- <button>click up button</button> -->
 	</div>
